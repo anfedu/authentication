@@ -3,7 +3,7 @@ const User = require("../models/user");
 module.exports = {
   signUp: async (req, res, next) => {
     try {
-      const { name, email, password } = req.value.body;
+      const { name, email, password } = req.body;
 
       // check if there is a user with the same email
       const foundUser = await User.findOne({
@@ -19,12 +19,14 @@ module.exports = {
         email,
         password,
       });
+
       newUser.save();
 
       // respond with token
       res.json({ user: "created" });
     } catch (err) {
-      res.status(404).send(err);
+      res.status(404).send({ status: 404, error: err.message });
+      console.log(err.message, "iki error 404");
     }
   },
   signIn: async (req, res, next) => {

@@ -4,10 +4,16 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-mongoose.connect("mongodb://localhost:8080/users", {
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-});
+mongoose.Promise = global.Promise;
+mongoose
+  .connect("mongodb://localhost:8080/users", {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+  })
+  .then((res) => {
+    console.log("iki res");
+  })
+  .catch((err) => console.log(err, "iki err"));
 
 const app = express();
 
