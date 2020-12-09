@@ -1,4 +1,18 @@
+require("dotenv").config();
+const JWT = require("jsonwebtoken");
 const User = require("../models/user");
+
+const signToken = (user) => {
+  return JWT.sign(
+    {
+      iss: "Anf edu",
+      sub: user.id,
+      iat: new Date().getTime(), // curent time
+      exp: new Date().setDate(new Date().getDay() + 1), // curent time + 1
+    },
+    process.env.JWT_SECRET
+  );
+};
 
 module.exports = {
   signUp: async (req, res, next) => {
@@ -19,11 +33,11 @@ module.exports = {
         email,
         password,
       });
+      await newUser.save();
 
-      newUser.save();
-
+      const token = signToken(newUser);
       // respond with token
-      res.json({ user: "created" });
+      res.status(200).json({ token });
     } catch (err) {
       res.status(404).send({ status: 404, error: err.message });
       console.log(err.message, "iki error 404");
