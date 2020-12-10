@@ -1,6 +1,7 @@
 require("dotenv").config();
 const JWT = require("jsonwebtoken");
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
 
 const signToken = (user) => {
   return JWT.sign(
@@ -37,7 +38,7 @@ module.exports = {
 
       const token = signToken(newUser);
       // respond with token
-      res.status(200).json({ token });
+      res.status(200).json({ email, token });
     } catch (err) {
       res.status(404).send({ status: 404, error: err.message });
       console.log(err.message, "iki error 404");
@@ -45,14 +46,56 @@ module.exports = {
   },
   signIn: async (req, res, next) => {
     try {
-      res.status(200).send({ status: 200, message: "signin success" });
+      const { email, password } = req.body;
+
+      const user = await User.findOne({
+        email,
+      });
+
+      if (!user)
+        return res.status(500).send({
+          status: 500,
+          error: {
+            message: "Email or password invalid",
+          },
+        });
+
+      var salt = bcrypt.genSaltSync(10);
+      var hash = bcrypt.hashSync(user.password, salt);
+
+      const validPass = bcrypt.compareSync(password, hash);
+
+      if (!validPass)
+        return res.status(500).send({
+          status: 500,
+          error: {
+            message: "Email or password invalid",
+          },
+        });
+
+      const token = JWT.sign({ id: user.id }, process.env.JWT_SECRET);
+
+      res.status(200).send({
+        status: 200,
+        message: "login success",
+        data: {
+          email: user.email,
+          token,
+        },
+      });
     } catch (err) {
-      res.status(404).send(err);
+      res.status(500).send({
+        status: 500,
+        message: err.message,
+      });
     }
   },
   secret: async (req, res, next) => {
     try {
-      res.status(200).send({ status: 200, message: "read user success" });
+      const users = await User.find({});
+      res
+        .status(200)
+        .send({ status: 200, message: "read user success", data: users });
     } catch (err) {
       res.status(404).send(err);
     }
