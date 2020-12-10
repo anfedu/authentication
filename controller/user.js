@@ -45,14 +45,14 @@ module.exports = {
   },
   signIn: async (req, res, next) => {
     try {
-      res.status(200).send("sign in success");
+      res.status(200).send({ status: 200, message: "signin success" });
     } catch (err) {
       res.status(404).send(err);
     }
   },
   secret: async (req, res, next) => {
     try {
-      res.status(200).send("secret success");
+      res.status(200).send({ status: 200, message: "read user success" });
     } catch (err) {
       res.status(404).send(err);
     }
