@@ -2,6 +2,7 @@ require("dotenv").config();
 const JWT = require("jsonwebtoken");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const joi = require("joi");
 
 const signToken = (user) => {
   return JWT.sign(
@@ -15,28 +16,46 @@ const signToken = (user) => {
   );
 };
 
+const schema = joi.object({
+  name: joi.string().min(3).required(),
+  email: joi.string().email().min(10).required(),
+  password: joi.string().min(8).required(),
+});
+
 module.exports = {
+  // function for signup
   signUp: async (req, res, next) => {
     try {
       const { name, email, password } = req.body;
+
+      const { error } = schema.validate(req.body);
+
+      if (error) {
+        return res.status(500).send({
+          status: 500,
+          error: {
+            message: error.details[0].message,
+          },
+        });
+      }
 
       // check if there is a user with the same email
       const foundUser = await User.findOne({
         email,
       });
       if (foundUser) {
-        return res.status(403).send({ error: "Email already" });
+        return res.status(403).send({ error: "Email already exist" });
       }
 
       // create a new user
-      const newUser = new User({
+      const user = new User({
         name,
         email,
         password,
       });
-      await newUser.save();
+      await user.save();
 
-      const token = signToken(newUser);
+      const token = signToken(user);
       // respond with token
       res.status(200).json({ email, token });
     } catch (err) {
@@ -44,6 +63,8 @@ module.exports = {
       console.log(err.message, "iki error 404");
     }
   },
+
+  // function for signin
   signIn: async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -90,6 +111,8 @@ module.exports = {
       });
     }
   },
+
+  // function for secret
   secret: async (req, res, next) => {
     try {
       const users = await User.find({});
@@ -98,6 +121,18 @@ module.exports = {
         .send({ status: 200, message: "read user success", data: users });
     } catch (err) {
       res.status(404).send(err);
+    }
+  },
+
+  deleteUser: async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const users = await User.findByIdAndDelete({
+        _id: id,
+      });
+      res.status(200).send({ status: 200, message: "delete user success" });
+    } catch (error) {
+      res.status(500).send({ status: 500, message: "delete user failed" });
     }
   },
 };

@@ -3,10 +3,9 @@ const router = require("express-promise-router")();
 const passport = require("passport");
 const passportConf = require("../passport");
 
-const { validateBody } = require("../helpers/routesHelper");
 const UserController = require("../controller/user");
 
-router.post("/signup", UserController.signUp, validateBody());
+router.post("/signup", UserController.signUp);
 
 router.post("/signin", UserController.signIn);
 
@@ -15,5 +14,7 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   UserController.secret
 );
+
+router.delete("/delete/:id", UserController.deleteUser);
 
 module.exports = router;
